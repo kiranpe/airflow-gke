@@ -1,0 +1,9 @@
+
+grafana:
+  adminPassword: prom-operator
+  service:
+    type: ClusterIP
+
+prometheus:
+  service:
+    type: ClusterIP

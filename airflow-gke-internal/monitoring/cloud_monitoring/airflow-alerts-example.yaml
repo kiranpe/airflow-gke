@@ -1,0 +1,24 @@
+
+# Example: GCP Monitoring Alert Policy (Terraform style or manually created via UI)
+# This YAML is descriptive; Terraform can manage these via google_monitoring_alert_policy
+
+description: |
+  Alerts when Airflow task failures exceed threshold.
+
+type: uptime_check_alert
+
+conditions:
+  - displayName: "High Task Failure Rate"
+    conditionThreshold:
+      filter: 'metric.type="airflow.googleapis.com/task/failure" AND resource.type="k8s_container"'
+      comparison: COMPARISON_GT
+      thresholdValue: 5
+      duration: "60s"
+      trigger:
+        count: 1
+
+notificationChannels:
+  - email: your-alerts@example.com
+
+combiner: OR
+enabled: true

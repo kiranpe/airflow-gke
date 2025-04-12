@@ -1,0 +1,24 @@
+
+{
+  "dashboard": {
+    "id": null,
+    "title": "Airflow Overview",
+    "tags": ["airflow"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "Task Duration",
+        "targets": [
+          {
+            "expr": "airflow_task_duration",
+            "legendFormat": "{{task}}",
+            "interval": ""
+          }
+        ]
+      }
+    ],
+    "schemaVersion": 16,
+    "version": 1
+  }
+}
