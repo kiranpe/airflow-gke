@@ -1,6 +1,6 @@
 
 resource "google_container_cluster" "airflow" {
-  name     = "airflow-cluster"
+  name     = "airflow-cluster-${var.env}"
   location = var.region
   project  = var.project_id
 
@@ -13,6 +13,14 @@ resource "google_container_cluster" "airflow" {
   ip_allocation_policy {
     cluster_secondary_range_name  = var.pods_range
     services_secondary_range_name = var.services_range
+  }
+
+  master_authorized_networks_config {
+    gcp_public_cidrs_access_enabled = false
+    cidr_blocks {
+      cidr_block   = var.authorized_cidr_blocks
+      display_name = "authorized-network"
+    }
   }
 
   private_cluster_config {
@@ -52,8 +60,9 @@ resource "google_container_node_pool" "primary_nodes" {
 
   autoscaling {
     min_node_count = 1
-    max_node_count = 5
+    max_node_count = 3
   }
 
-  initial_node_count = 2
+  initial_node_count = var.node_pool_size
+  node_count         = var.node_pool_size
 }
