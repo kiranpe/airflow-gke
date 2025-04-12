@@ -1,0 +1,55 @@
+
+executor: KubernetesExecutor
+
+airflow:
+  config:
+    AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+    AIRFLOW__KUBERNETES__DAGS_VOLUME_MOUNT_POINT: /opt/airflow/dags
+    AIRFLOW__KUBERNETES__NAMESPACE: airflow
+    AIRFLOW__KUBERNETES__DELETE_WORKER_PODS: "True"
+    AIRFLOW__LOGGING__REMOTE_LOGGING: "True"
+    AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER: gs://stage-airflow-logs
+    AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID: google_cloud_default
+
+  extraEnv:
+    - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
+      valueFrom:
+        secretKeyRef:
+          name: airflow-db-secret
+          key: connection
+
+web:
+  service:
+    type: LoadBalancer
+    annotations:
+      cloud.google.com/load-balancer-type: "Internal"
+    loadBalancerIP: 10.10.30.10
+    ports:
+      - port: 8080
+        targetPort: 8080
+        name: web
+
+  extraLabels:
+    component: web
+
+dags:
+  persistence:
+    enabled: true
+    existingClaim: airflow-dags-pvc
+
+gcs:
+  dags_bucket: stage-airflow-dags
+  logs_bucket: stage-airflow-logs
+
+workers:
+  enabled: false
+
+triggerer:
+  replicas: 1
+
+scheduler:
+  replicas: 1
+
+createUserJob:
+  useHelmHooks: true
+  applyCustomEnv: true
