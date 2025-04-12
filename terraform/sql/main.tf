@@ -24,7 +24,7 @@ resource "google_sql_database_instance" "airflow" {
 resource "random_password" "user-password" {
   count = var.enable_default_user ? 1 : 0
   keepers = {
-    name = google_sql_database_instance.default.name
+    name = google_sql_database_instance.airflow.name
   }
 
   min_lower   = 1
