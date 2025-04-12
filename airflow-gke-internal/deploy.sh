@@ -23,6 +23,6 @@ helm repo update
 helm upgrade --install airflow apache-airflow/airflow \
   --namespace airflow \
   --create-namespace \
-  -f airflow-values.yaml
+  -f dev-values.yaml
 
 echo "Deployment complete!"
