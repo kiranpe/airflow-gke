@@ -28,6 +28,12 @@ resource "google_container_cluster" "airflow" {
   release_channel {
     channel = "REGULAR"
   }
+
+  addons_config {
+    gcs_fuse_csi_driver_config {
+      enabled = true
+    }
+  }
 }
 
 resource "google_container_node_pool" "primary_nodes" {
@@ -41,6 +47,7 @@ resource "google_container_node_pool" "primary_nodes" {
     oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
     tags         = ["airflow-nodes"]
     service_account = var.gke_node_sa
+    preemptible     = var.use_preemptible_nodes
   }
 
   autoscaling {

@@ -6,3 +6,4 @@ variable "subnetwork" {}
 variable "pods_range" {}
 variable "services_range" {}
 variable "gke_node_sa" {}
+variable "use_preemptible_nodes" {}
