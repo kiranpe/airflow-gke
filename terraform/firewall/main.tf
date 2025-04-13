@@ -9,8 +9,8 @@ resource "google_compute_firewall" "allow_internal_airflow" {
   }
 
   source_ranges = [
-    "10.10.0.0/20",   # Pod IP range
-    "10.10.30.0/24"   # Service IP range
+    "10.10.0.0/20", # Pod IP range
+    "10.10.30.0/24" # Service IP range
   ]
 
   target_tags = ["airflow-nodes"]

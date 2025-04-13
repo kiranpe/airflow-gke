@@ -3,6 +3,7 @@ variable "project_id" {}
 variable "region" {}
 variable "vpc_id" {}
 variable "db_password" {}
+
 variable "enable_default_user" {
   description = "Enable or disable the creation of the default user"
   type        = bool

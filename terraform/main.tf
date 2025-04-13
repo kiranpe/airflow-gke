@@ -1,52 +1,45 @@
 
-# module "vpc" {
-#   source       = "./vpc"
-#   project_id   = var.project_id
-#   region       = var.region
-#   network_name = "airflow-vpc"
-#   subnets = [
-#     {
-#       name          = "airflow-subnet"
-#       ip_cidr_range = "10.10.0.0/16"
-#       region        = var.region
-#     }
-#   ]
-#   enable_nat_gateway = true
-# }
+module "vpc" {
+  source       = "./vpc"
+  project_id   = var.project_id
+  region       = var.region
+  network_name = "airflow-vpc"
+  subnets = [
+    {
+      subnet_name   = "airflow-subnet"
+      ip_cidr_range = "192.168.10.0/24"
+      region        = var.region
+    }
+  ]
 
-# module "nat" {
-#   source  = "./vpc/nat"
-#   region  = var.region
-#   network = module.vpc.vpc_network_id
-# }
+  secondary_ranges = {
+    airflow-subnet = [
+      {
+        range_name    = "airflow-pods"
+        ip_cidr_range = "10.10.0.0/20"
+      },
+      {
+        range_name    = "airflow-services"
+        ip_cidr_range = "10.10.30.0/24"
+      },
+    ]
+  }
+}
+
+module "nat" {
+  source  = "./vpc/nat"
+  region  = var.region
+  network = module.vpc.vpc_network_id
+}
+
+module "firewall" {
+  source  = "./firewall"
+  network = module.vpc.vpc_network_id
+}
 
 module "iam" {
   source     = "./iam"
   project_id = var.project_id
-}
-
-module "gke_dev" {
-  source                         = "./gke"
-  project_id                     = var.project_id
-  region                         = var.region
-  network                        = data.google_compute_network.vpc.id
-  subnetwork                     = "gke-node-subnet"
-  pods_range                     = "10.10.0.0/20"
-  services_range                 = "10.10.30.0/24"
-  gke_node_sa                    = module.iam.airflow_gke_sa_email
-  use_preemptible_nodes          = true
-  node_pool_size                 = 2
-  authorized_cidr_blocks         = "10.2.0.0/24"
-  enable_gcsfuse_csi_driver      = true
-  env                            = "dev"
-}
-
-module "cloudsql" {
-  source      = "./sql"
-  project_id  = var.project_id
-  region      = var.region
-  vpc_id      = data.google_compute_network.vpc.id
-  db_password = ""
 }
 
 module "gcs" {
@@ -56,9 +49,30 @@ module "gcs" {
   gke_sa_email = module.iam.airflow_gke_sa_email
 }
 
-module "firewall" {
-  source  = "./firewall"
-  network = data.google_compute_network.vpc.id
+module "gke_dev" {
+  source                    = "./gke"
+  project_id                = var.project_id
+  zone                      = var.zone
+  network                   = module.vpc.vpc_network_id
+  subnetwork                = "airflow-subnet"
+  pods_range                = "airflow-pods"
+  services_range            = "airflow-services"
+  gke_node_sa               = module.iam.airflow_gke_sa_email
+  use_preemptible_nodes     = false
+  node_pool_size            = 1
+  authorized_cidr_blocks    = "10.2.0.0/24"
+  enable_gcsfuse_csi_driver = true
+  env                       = "dev"
+}
+
+module "cloudsql" {
+  source      = "./sql"
+  project_id  = var.project_id
+  region      = var.region
+  vpc_id      = module.vpc.vpc_network_id
+  db_password = ""
+
+  depends_on = [module.vpc, module.nat]
 }
 
 # module "dns" {

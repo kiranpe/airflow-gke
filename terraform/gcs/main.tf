@@ -1,15 +1,15 @@
 
 resource "google_storage_bucket" "airflow_dags" {
-  name     = "${var.project_id}-airflow-dags"
-  location = var.region
-  project  = var.project_id
+  name                        = "${var.project_id}-airflow-dags"
+  location                    = var.region
+  project                     = var.project_id
   uniform_bucket_level_access = true
 }
 
 resource "google_storage_bucket" "airflow_logs" {
-  name     = "${var.project_id}-airflow-logs"
-  location = var.region
-  project  = var.project_id
+  name                        = "${var.project_id}-airflow-logs"
+  location                    = var.region
+  project                     = var.project_id
   uniform_bucket_level_access = true
 }
 

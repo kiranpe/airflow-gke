@@ -1,33 +1,34 @@
-
-resource "google_container_cluster" "airflow" {
+resource "google_container_cluster" "gke_airflow_cluster" {
+  provider = google-beta
   name     = "airflow-cluster-${var.env}"
-  location = var.region
+  location = var.zone
   project  = var.project_id
-
-  remove_default_node_pool = true
-  initial_node_count       = 1
 
   network    = var.network
   subnetwork = var.subnetwork
+
+  remove_default_node_pool = true
+  initial_node_count       = 1
 
   ip_allocation_policy {
     cluster_secondary_range_name  = var.pods_range
     services_secondary_range_name = var.services_range
   }
 
+  private_cluster_config {
+    enable_private_nodes    = true
+    enable_private_endpoint = true
+    master_ipv4_cidr_block  = "172.16.0.0/28"
+  }
+
   master_authorized_networks_config {
-    gcp_public_cidrs_access_enabled = false
     cidr_blocks {
-      cidr_block   = var.authorized_cidr_blocks
-      display_name = "authorized-network"
+      cidr_block   = "10.2.0.0/24"
+      display_name = "authorized"
     }
   }
 
-  private_cluster_config {
-    enable_private_nodes    = true
-    enable_private_endpoint = false
-    master_ipv4_cidr_block  = "172.16.0.0/28"
-  }
+  datapath_provider = "ADVANCED_DATAPATH"
 
   workload_identity_config {
     workload_pool = "${var.project_id}.svc.id.goog"
@@ -44,25 +45,31 @@ resource "google_container_cluster" "airflow" {
   }
 }
 
-resource "google_container_node_pool" "primary_nodes" {
-  name       = "primary-node-pool"
-  cluster    = google_container_cluster.airflow.name
-  location   = var.region
-  project    = var.project_id
+resource "google_container_node_pool" "gke_airflow_node_pool" {
+  name     = "airflow-node-pool"
+  cluster  = google_container_cluster.gke_airflow_cluster.name
+  location = var.zone
+  project  = var.project_id
+
+  node_count = 3
 
   node_config {
-    machine_type = "e2-standard-4"
-    oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-    tags         = ["airflow-nodes"]
+    machine_type    = "e2-standard-2"
+    disk_size_gb    = 50
+    disk_type       = "pd-standard"
+    oauth_scopes    = ["https://www.googleapis.com/auth/cloud-platform"]
     service_account = var.gke_node_sa
-    preemptible     = var.use_preemptible_nodes
+    tags            = ["airflow-nodes"]
   }
+
+  max_pods_per_node = 25
 
   autoscaling {
     min_node_count = 1
-    max_node_count = 3
+    max_node_count = 5
   }
 
-  initial_node_count = var.node_pool_size
-  node_count         = var.node_pool_size
+  network_config {
+    enable_private_nodes = true
+  }
 }

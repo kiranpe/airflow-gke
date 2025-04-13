@@ -14,7 +14,7 @@ resource "google_sql_database_instance" "airflow" {
     }
 
     backup_configuration {
-      enabled = true
+      enabled = false
     }
   }
 

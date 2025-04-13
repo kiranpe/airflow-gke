@@ -1,9 +1,9 @@
 
 resource "google_dns_managed_zone" "internal_airflow" {
-  name        = "internal-airflow-zone"
-  dns_name    = "internal.example.com."
-  visibility  = "private"
-  project     = var.project_id
+  name       = "internal-airflow-zone"
+  dns_name   = "internal.example.com."
+  visibility = "private"
+  project    = var.project_id
 
   private_visibility_config {
     networks {
