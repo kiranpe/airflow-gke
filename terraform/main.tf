@@ -9,7 +9,12 @@ module "vpc" {
       subnet_name   = "airflow-subnet"
       ip_cidr_range = "192.168.10.0/24"
       region        = var.region
-    }
+    },
+    {
+      subnet_name   = "airflow-bastion-host-subnet"
+      ip_cidr_range = "10.2.0.0/24"
+      region        = var.region
+    },
   ]
 
   secondary_ranges = {
@@ -73,6 +78,12 @@ module "cloudsql" {
   db_password = ""
 
   depends_on = [module.vpc, module.nat]
+}
+
+module "bastion" {
+  source = "./bastion-host"
+
+  depends_on = [module.vpc, module.firewall]
 }
 
 # module "dns" {

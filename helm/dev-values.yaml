@@ -11,6 +11,17 @@ airflow:
     AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER: gs://dev-airflow-logs
     AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID: google_cloud_default
 
+  extraContainers:
+    - name: cloudsql-proxy
+      image: gcr.io/cloudsql-docker/gce-proxy:1.33.7
+      command:
+        - "/cloud_sql_proxy"
+        - "-instances=mlops-448320:us-east1:airflow-sql=tcp:5432"
+        - "-ip_address_types=PRIVATE"
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 2
+
   extraEnv:
     - name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN
       valueFrom:
@@ -41,11 +52,15 @@ gcs:
   dags_bucket: dev-airflow-dags
   logs_bucket: dev-airflow-logs
 
-workers:
-  enabled: false
-
 triggerer:
   replicas: 1
+  logs:
+    persistence:
+      enabled: true
+      existingClaim: logs-airflow-triggerer
+      storageClassName: gcsfuse-rwx   # ✅ or whatever SC you want
+      accessMode: ReadWriteMany
+      size: 5Gi
 
 scheduler:
   replicas: 1

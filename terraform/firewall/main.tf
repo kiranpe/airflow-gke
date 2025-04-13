@@ -10,10 +10,30 @@ resource "google_compute_firewall" "allow_internal_airflow" {
 
   source_ranges = [
     "10.10.0.0/20", # Pod IP range
-    "10.10.30.0/24" # Service IP range
+    "10.10.30.0/24", # Service IP range
+    "10.2.0.0/24"
   ]
 
   target_tags = ["airflow-nodes"]
+  direction   = "INGRESS"
+  priority    = 1000
+  description = "Allow internal traffic to Airflow services"
+}
+
+resource "google_compute_firewall" "allow_ssh" {
+  name    = "allow-bastion-host-ssh"
+  network = var.network
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = [
+    "35.235.240.0/20"
+  ]
+
+  target_tags = ["allow-bastion-ssh"]
   direction   = "INGRESS"
   priority    = 1000
   description = "Allow internal traffic to Airflow services"
